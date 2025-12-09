@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Meeting Agent | Enterprise Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Theme: Professional Purple (Elegant/High-End) -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary: #2e1065; /* Violet 950 - Deep Professional Purple (Replaces Black) */
+            --accent: #7c3aed;  /* Violet 600 - Vivid Purple */
+            --border: #e2e8f0;  /* Slate 200 */
+            --bg-subtle: #f5f3ff; /* Violet 50 - Very subtle tint */
+            --text-main: #334155; /* Slate 700 - Body text */
+            --text-header: #2e1065; /* Violet 950 - Headers */
+        }
+
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-subtle); color: var(--text-main); }
+
+        /* Container */
+        .wf-container {
+            background-color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* Sidebar */
+        .wf-sidebar {
+            width: 260px;
+            background-color: white;
+            border-right: 1px solid var(--border);
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            z-index: 50;
+        }
+
+        .wf-sidebar .logo-area {
+            height: 64px;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            border-bottom: 1px solid var(--border);
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 1rem;
+            letter-spacing: -0.02em;
+        }
+
+        .nav-section-title {
+            padding: 24px 24px 8px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+            color: #94a3b8;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 10px 24px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-right: 3px solid transparent;
+        }
+
+        .nav-link:hover {
+            background-color: var(--bg-subtle);
+            color: var(--primary);
+        }
+
+        .nav-link.active {
+            background-color: #ede9fe; /* violet-100 */
+            color: var(--accent);
+            border-right-color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* Main Content */
+        .wf-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background-color: #ffffff;
+        }
+
+        .wf-header {
+            height: 64px;
+            background-color: white;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+        }
+
+        .wf-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 32px;
+            background-color: #fcfcfc; /* Neutral content bg */
+        }
+
+        /* Outlined Card Style - Elegant */
+        .card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px; /* Sharper corners */
+            padding: 24px;
+            transition: border-color 0.2s;
+        }
+        
+        .card:hover {
+            border-color: #c4b5fd; /* Light purple border on hover */
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background-color: var(--accent);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.875rem;
+            border: 1px solid var(--accent);
+            transition: all 0.2s;
+        }
+        .btn-primary:hover { background-color: var(--primary); border-color: var(--primary); }
+
+        .btn-secondary {
+            background-color: white;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* Badges - Subtle */
+        .badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            border: 1px solid transparent;
+        }
+        .badge-green { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+        .badge-purple { background: #f3e8ff; color: #6b21a8; border-color: #d8b4fe; } /* Replaces blue */
+        .badge-amber { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+        .badge-slate { background: #f1f5f9; color: #475569; border-color: #e2e8f0; }
+
+        /* Screens */
+        .screen { display: none; animation: fadeIn 0.2s ease-out; }
+        .screen.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        
+        /* Chart Bars (CSS Only) */
+        .bar-container {
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            height: 100%;
+        }
+        .bar {
+            flex: 1;
+            background-color: #e2e8f0;
+            border-radius: 2px 2px 0 0;
+            transition: height 0.5s ease;
+        }
+        .bar:hover { background-color: var(--accent); }
+    </style>
+</head>
+<body>
+
+    <div class="wf-container">
+        
+        <!-- SIDEBAR -->
+        <aside class="wf-sidebar">
+            <div class="logo-area">
+                <i class="fa-solid fa-layer-group text-violet-700 mr-3 text-xl"></i>
+                <span class="text-violet-950">AI Meeting Agent</span>
+            </div>
+
+            <div class="flex flex-col flex-1 overflow-y-auto">
+                <!-- SUPER ADMIN SECTION -->
+                <div id="nav-section-admin" class="hidden">
+                    <div class="nav-section-title">Administration</div>
+                    <div class="nav-link active" onclick="navTo('owner-dashboard', this)">
+                        <i class="fa-solid fa-chart-pie w-5 mr-3 text-slate-400"></i> Overview
+                    </div>
+                    <div class="nav-link" onclick="navTo('tenants', this)">
+                        <i class="fa-solid fa-users-gear w-5 mr-3 text-slate-400"></i> Tenant Manager
+                    </div>
+                </div>
+
+                <!-- TENANT SECTION -->
+                <div class="nav-section-title">Workspace</div>
+                <div id="nav-tenant-dashboard" class="nav-link" onclick="navTo('tenant-dashboard', this)">
+                    <i class="fa-solid fa-house w-5 mr-3 text-slate-400"></i> Dashboard
+                </div>
+                <div class="nav-link" onclick="navTo('archive', this)">
+                    <i class="fa-solid fa-clock-rotate-left w-5 mr-3 text-slate-400"></i> Meeting Archive
+                </div>
+                <div class="nav-link" onclick="navTo('tasks', this)">
+                    <i class="fa-solid fa-diagram-project w-5 mr-3 text-slate-400"></i> Task Orchestration
+                </div>
+
+                <div class="nav-section-title">Configuration</div>
+                <div class="nav-link" onclick="navTo('knowledge', this)">
+                    <i class="fa-solid fa-book-bookmark w-5 mr-3 text-slate-400"></i> Knowledge Base
+                </div>
+                <div class="nav-link" onclick="navTo('integrations', this)">
+                    <i class="fa-solid fa-sliders w-5 mr-3 text-slate-400"></i> Integrations
+                </div>
+            </div>
+
+            <!-- Profile -->
+            <div class="p-4 border-t border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded bg-violet-100 text-violet-700 flex items-center justify-center font-bold text-xs">AA</div>
+                    <div>
+                        <p class="text-sm font-bold text-violet-950" id="user-name">Alex Admin</p>
+                        <p class="text-xs text-slate-500" id="user-role">System Owner</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="wf-main">
+            <!-- Header -->
+            <header class="wf-header">
+                <h2 id="page-title" class="text-lg font-bold text-violet-950">Overview</h2>
+                
+                <div class="flex items-center space-x-4">
+                    <!-- Role Switcher -->
+                    <div class="flex items-center bg-slate-50 rounded border border-slate-200 p-1">
+                        <button onclick="switchRole('owner')" id="role-btn-owner" class="px-3 py-1 text-xs font-bold rounded bg-white border border-slate-200 shadow-sm text-violet-950">Owner</button>
+                        <button onclick="switchRole('tenant')" id="role-btn-tenant" class="px-3 py-1 text-xs font-medium rounded text-slate-500 hover:text-slate-700">Tenant</button>
+                    </div>
+                    
+                    <button class="btn-primary">
+                        <i class="fa-solid fa-plus mr-2"></i> New Meeting
+                    </button>
+                </div>
+            </header>
+
+            <div class="wf-content">
+
+                <!-- 1. OWNER DASHBOARD (Clean & Professional) -->
+                <div id="screen-owner-dashboard" class="screen active">
+                    <!-- Metric Cards -->
+                    <div class="grid grid-cols-4 gap-6 mb-8">
+                        <div class="card">
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Total Tenants</p>
+                            <div class="flex items-end justify-between">
+                                <h3 class="text-3xl font-bold text-violet-950">124</h3>
+                                <span class="badge badge-green">+8%</span>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Active Meetings</p>
+                            <div class="flex items-end justify-between">
+                                <h3 class="text-3xl font-bold text-violet-950">42</h3>
+                                <span class="badge badge-purple">Running</span>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">API Usage</p>
+                            <div class="flex items-end justify-between">
+                                <h3 class="text-3xl font-bold text-violet-950">84%</h3>
+                                <span class="text-xs text-slate-500">of Quota</span>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">System Status</p>
+                            <div class="flex items-end justify-between">
+                                <h3 class="text-xl font-bold text-violet-950">Operational</h3>
+                                <div class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-6">
+                        <div class="col-span-2 card">
+                            <h3 class="font-bold text-violet-950 mb-6 text-sm">Platform Usage (30 Days)</h3>
+                            <div class="h-64 bar-container px-4 border-b border-l border-slate-200">
+                                <div class="bar h-[40%]"></div><div class="bar h-[55%]"></div><div class="bar h-[45%]"></div>
+                                <div class="bar h-[70%]"></div><div class="bar h-[65%]"></div><div class="bar h-[85%] bg-violet-900"></div>
+                                <div class="bar h-[75%]"></div><div class="bar h-[60%]"></div><div class="bar h-[50%]"></div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h3 class="font-bold text-violet-950 mb-4 text-sm">Server Health</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="flex justify-between text-xs mb-1"><span>CPU Load</span><span>45%</span></div>
+                                    <div class="w-full bg-slate-100 h-1.5 rounded"><div class="bg-violet-900 h-1.5 rounded w-[45%]"></div></div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-xs mb-1"><span>Memory</span><span>72%</span></div>
+                                    <div class="w-full bg-slate-100 h-1.5 rounded"><div class="bg-violet-600 h-1.5 rounded w-[72%]"></div></div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-xs mb-1"><span>Database IO</span><span>Low</span></div>
+                                    <div class="w-full bg-slate-100 h-1.5 rounded"><div class="bg-emerald-500 h-1.5 rounded w-[20%]"></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. TENANT MANAGER (New Screen) -->
+                <div id="screen-tenants" class="screen">
+                    <div class="card p-0">
+                        <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                            <div class="flex gap-2">
+                                <input type="text" placeholder="Search tenants..." class="border border-slate-300 rounded px-3 py-1.5 text-sm w-64 focus:outline-none focus:border-violet-500">
+                                <button class="btn-secondary text-xs">Filter</button>
+                            </div>
+                            <button class="btn-primary text-xs">Add Tenant</button>
+                        </div>
+                        <table class="w-full text-sm text-left">
+                            <thead class="text-slate-500 bg-slate-50 border-b border-slate-200">
+                                <tr>
+                                    <th class="px-6 py-3 font-semibold">Tenant Name</th>
+                                    <th class="px-6 py-3 font-semibold">Plan</th>
+                                    <th class="px-6 py-3 font-semibold">Users</th>
+                                    <th class="px-6 py-3 font-semibold">Status</th>
+                                    <th class="px-6 py-3 font-semibold text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="px-6 py-4 font-medium text-violet-950">Acme Corporation</td>
+                                    <td class="px-6 py-4 text-slate-500">Enterprise</td>
+                                    <td class="px-6 py-4 text-slate-500">240</td>
+                                    <td class="px-6 py-4"><span class="badge badge-green">Active</span></td>
+                                    <td class="px-6 py-4 text-right">
+                                        <button class="text-slate-400 hover:text-violet-600 mr-3">Manage</button>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="px-6 py-4 font-medium text-violet-950">Stark Industries</td>
+                                    <td class="px-6 py-4 text-slate-500">Pro</td>
+                                    <td class="px-6 py-4 text-slate-500">45</td>
+                                    <td class="px-6 py-4"><span class="badge badge-green">Active</span></td>
+                                    <td class="px-6 py-4 text-right">
+                                        <button class="text-slate-400 hover:text-violet-600 mr-3">Manage</button>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="px-6 py-4 font-medium text-violet-950">Cyberdyne Systems</td>
+                                    <td class="px-6 py-4 text-slate-500">Enterprise</td>
+                                    <td class="px-6 py-4 text-slate-500">800</td>
+                                    <td class="px-6 py-4"><span class="badge badge-amber">Payment Due</span></td>
+                                    <td class="px-6 py-4 text-right">
+                                        <button class="text-slate-400 hover:text-violet-600 mr-3">Manage</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 3. TASK ORCHESTRATION -->
+                <div id="screen-tasks" class="screen">
+                    <div class="grid grid-cols-12 gap-6 mb-6">
+                        <!-- Chart Area for Tasks -->
+                        <div class="col-span-8 card flex flex-col justify-between">
+                            <div class="flex justify-between mb-4">
+                                <h3 class="font-bold text-violet-950 text-sm">Task Velocity</h3>
+                                <div class="flex gap-2 text-xs">
+                                    <span class="flex items-center"><span class="w-2 h-2 bg-violet-900 rounded-full mr-1"></span>Completed</span>
+                                    <span class="flex items-center"><span class="w-2 h-2 bg-violet-500 rounded-full mr-1"></span>Open</span>
+                                </div>
+                            </div>
+                            <!-- CSS Chart representation -->
+                            <div class="flex items-end space-x-3 h-32 border-b border-slate-200 pb-1">
+                                <div class="w-full bg-slate-100 rounded-t h-full flex items-end">
+                                    <div class="w-1/2 bg-violet-500 h-[60%]"></div>
+                                    <div class="w-1/2 bg-violet-900 h-[40%]"></div>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-t h-full flex items-end">
+                                    <div class="w-1/2 bg-violet-500 h-[50%]"></div>
+                                    <div class="w-1/2 bg-violet-900 h-[50%]"></div>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-t h-full flex items-end">
+                                    <div class="w-1/2 bg-violet-500 h-[30%]"></div>
+                                    <div class="w-1/2 bg-violet-900 h-[70%]"></div>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-t h-full flex items-end">
+                                    <div class="w-1/2 bg-violet-500 h-[20%]"></div>
+                                    <div class="w-1/2 bg-violet-900 h-[80%]"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Integration Status -->
+                        <div class="col-span-4 card">
+                            <h3 class="font-bold text-violet-950 text-sm mb-4">Sync Status</h3>
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between p-2 border border-slate-200 rounded">
+                                    <div class="flex items-center">
+                                        <i class="fa-brands fa-jira text-blue-600 text-lg mr-3"></i>
+                                        <span class="text-sm font-medium">Jira</span>
+                                    </div>
+                                    <span class="badge badge-green">Live</span>
+                                </div>
+                                <div class="flex items-center justify-between p-2 border border-slate-200 rounded">
+                                    <div class="flex items-center">
+                                        <i class="fa-brands fa-trello text-blue-400 text-lg mr-3"></i>
+                                        <span class="text-sm font-medium">Trello</span>
+                                    </div>
+                                    <span class="badge badge-slate">Off</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kanban Board - Professional Style -->
+                    <div class="flex gap-6 h-[500px] overflow-x-auto">
+                        <!-- Column 1 -->
+                        <div class="w-80 bg-slate-50 rounded-lg border border-slate-200 flex flex-col">
+                            <div class="p-3 border-b border-slate-200 font-semibold text-violet-950 text-sm flex justify-between">
+                                <span>Identified</span>
+                                <span class="bg-white border border-slate-200 px-2 rounded text-xs py-0.5">3</span>
+                            </div>
+                            <div class="p-3 space-y-3 overflow-y-auto">
+                                <div class="bg-white p-3 rounded border border-slate-200 shadow-sm cursor-pointer hover:border-violet-400">
+                                    <span class="badge badge-purple text-[10px] mb-2">AI Draft</span>
+                                    <p class="text-sm font-medium text-violet-950">Draft Q4 Newsletter</p>
+                                    <div class="mt-2 text-xs text-slate-400 flex justify-between">
+                                        <span>Source: Marketing Sync</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Column 2 -->
+                        <div class="w-80 bg-slate-50 rounded-lg border border-slate-200 flex flex-col">
+                            <div class="p-3 border-b border-slate-200 font-semibold text-violet-950 text-sm flex justify-between">
+                                <span>Processing</span>
+                                <span class="bg-white border border-slate-200 px-2 rounded text-xs py-0.5">2</span>
+                            </div>
+                            <div class="p-3 space-y-3 overflow-y-auto">
+                                <div class="bg-white p-3 rounded border border-slate-200 border-l-4 border-l-amber-500 shadow-sm cursor-pointer hover:border-amber-400">
+                                    <p class="text-sm font-medium text-violet-950">Fix Auth Module Bug</p>
+                                    <div class="mt-2 text-xs text-slate-400 flex justify-between items-center">
+                                        <span>Assignee: Sarah</span>
+                                        <i class="fa-brands fa-jira text-blue-500"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Column 3 -->
+                        <div class="w-80 bg-slate-50 rounded-lg border border-slate-200 flex flex-col">
+                            <div class="p-3 border-b border-slate-200 font-semibold text-violet-950 text-sm flex justify-between">
+                                <span>Completed</span>
+                                <span class="bg-white border border-slate-200 px-2 rounded text-xs py-0.5">12</span>
+                            </div>
+                            <div class="p-3 space-y-3 overflow-y-auto">
+                                <div class="bg-white p-3 rounded border border-slate-200 shadow-sm opacity-60">
+                                    <p class="text-sm font-medium text-violet-950 line-through">Send Invite to Client</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. MEETING ARCHIVE (New Screen) -->
+                <div id="screen-archive" class="screen">
+                    <div class="card p-0">
+                        <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                            <h3 class="font-bold text-violet-950">Past Meeting Summaries</h3>
+                            <div class="flex gap-2">
+                                <button class="btn-secondary text-xs">Date Range</button>
+                                <button class="btn-secondary text-xs">Participants</button>
+                            </div>
+                        </div>
+                        <div class="divide-y divide-slate-100">
+                            <!-- Item 1 -->
+                            <div class="p-4 hover:bg-slate-50 transition-colors cursor-pointer group">
+                                <div class="flex justify-between mb-1">
+                                    <h4 class="font-bold text-violet-950 group-hover:text-violet-600">Q3 Product Roadmap Review</h4>
+                                    <span class="text-xs text-slate-500">Oct 24, 2:00 PM</span>
+                                </div>
+                                <p class="text-sm text-slate-600 line-clamp-2">Meeting focused on finalizing features for Q3. Authentication module delay was identified as a blocker. Security audit follow-up required.</p>
+                                <div class="mt-2 flex gap-2">
+                                    <span class="badge badge-slate text-[10px]">#product</span>
+                                    <span class="badge badge-slate text-[10px]">#security</span>
+                                </div>
+                            </div>
+                            <!-- Item 2 -->
+                            <div class="p-4 hover:bg-slate-50 transition-colors cursor-pointer group">
+                                <div class="flex justify-between mb-1">
+                                    <h4 class="font-bold text-violet-950 group-hover:text-violet-600">Client Kickoff: Uber</h4>
+                                    <span class="text-xs text-slate-500">Oct 22, 10:00 AM</span>
+                                </div>
+                                <p class="text-sm text-slate-600 line-clamp-2">Initial requirements gathering. Client requested specific focus on mobile app latency. Integration timelines agreed upon.</p>
+                                <div class="mt-2 flex gap-2">
+                                    <span class="badge badge-slate text-[10px]">#client</span>
+                                    <span class="badge badge-slate text-[10px]">#sales</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. INTEGRATIONS (Fixed Logos) -->
+                <div id="screen-integrations" class="screen">
+                    <div class="grid grid-cols-3 gap-6">
+                        <!-- Zoom -->
+                        <div class="card flex flex-col items-center text-center">
+                            <div class="w-12 h-12 rounded bg-slate-50 flex items-center justify-center mb-4 border border-slate-200">
+                                <i class="fa-solid fa-video text-2xl text-blue-500"></i>
+                            </div>
+                            <h3 class="font-bold text-violet-950">Zoom</h3>
+                            <p class="text-xs text-slate-500 mb-4">Meeting ingestion</p>
+                            <button class="btn-secondary w-full text-xs">Configure</button>
+                        </div>
+                        <!-- HubSpot (Fixed Icon) -->
+                        <div class="card flex flex-col items-center text-center">
+                            <div class="w-12 h-12 rounded bg-slate-50 flex items-center justify-center mb-4 border border-slate-200">
+                                <i class="fa-brands fa-hubspot text-2xl text-orange-600"></i>
+                            </div>
+                            <h3 class="font-bold text-violet-950">HubSpot</h3>
+                            <p class="text-xs text-slate-500 mb-4">CRM Sync</p>
+                            <button class="btn-primary w-full text-xs">Connect</button>
+                        </div>
+                        <!-- Jira -->
+                        <div class="card flex flex-col items-center text-center">
+                            <div class="w-12 h-12 rounded bg-slate-50 flex items-center justify-center mb-4 border border-slate-200">
+                                <i class="fa-brands fa-jira text-2xl text-blue-600"></i>
+                            </div>
+                            <h3 class="font-bold text-violet-950">Jira</h3>
+                            <p class="text-xs text-slate-500 mb-4">Task Push</p>
+                            <button class="btn-secondary w-full text-xs">Configure</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. TENANT DASHBOARD (Standard UI) -->
+                <div id="screen-tenant-dashboard" class="screen">
+                    <div class="grid grid-cols-3 gap-6">
+                        <div class="col-span-2 card bg-violet-950 text-white border-none">
+                            <div class="flex justify-between items-start mb-6">
+                                <div>
+                                    <div class="text-violet-300 text-xs font-bold uppercase tracking-wider">Next Up</div>
+                                    <h3 class="text-2xl font-bold mt-1 text-white">Product Roadmap Q4</h3>
+                                </div>
+                                <div class="bg-white/10 p-2 rounded">
+                                    <i class="fa-solid fa-video text-white"></i>
+                                </div>
+                            </div>
+                            <div class="flex gap-3 mt-4">
+                                <button class="bg-white text-violet-950 px-4 py-2 rounded font-bold text-sm">Join Meeting</button>
+                                <button class="border border-violet-400 text-white px-4 py-2 rounded font-bold text-sm">Reschedule</button>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h3 class="font-bold text-violet-950 mb-2">Pending Actions</h3>
+                            <div class="text-3xl font-bold text-violet-950 mb-1">5</div>
+                            <div class="text-xs text-slate-500">High Priority Tasks</div>
+                            <div class="mt-4 pt-4 border-t border-slate-100">
+                                <button class="text-xs text-violet-600 font-bold" onclick="navTo('tasks')">View Task Board</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function switchRole(role) {
+            const ownerNav = document.getElementById('nav-section-admin');
+            const btnOwner = document.getElementById('role-btn-owner');
+            const btnTenant = document.getElementById('role-btn-tenant');
+            const pageTitle = document.getElementById('page-title');
+            
+            // Visual Toggle State
+            if(role === 'owner') {
+                btnOwner.className = "px-3 py-1 text-xs font-bold rounded bg-white border border-slate-200 shadow-sm text-violet-950";
+                btnTenant.className = "px-3 py-1 text-xs font-medium rounded text-slate-500 hover:text-slate-700";
+                ownerNav.classList.remove('hidden');
+                pageTitle.innerText = "System Command Center";
+                navTo('owner-dashboard', document.querySelector('.nav-link'));
+            } else {
+                btnTenant.className = "px-3 py-1 text-xs font-bold rounded bg-white border border-slate-200 shadow-sm text-violet-950";
+                btnOwner.className = "px-3 py-1 text-xs font-medium rounded text-slate-500 hover:text-slate-700";
+                ownerNav.classList.add('hidden');
+                pageTitle.innerText = "Workspace Overview";
+                navTo('tenant-dashboard', document.getElementById('nav-tenant-dashboard'));
+            }
+        }
+
+        function navTo(screenId, element) {
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+            if(element) element.classList.add('active');
+            
+            document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+            const target = document.getElementById('screen-' + screenId);
+            if(target) target.classList.add('active');
+
+            // Update Header Title based on screen
+            const titles = {
+                'owner-dashboard': 'System Command Center',
+                'tenants': 'Tenant Management',
+                'tenant-dashboard': 'Workspace Overview',
+                'archive': 'Meeting Archive',
+                'tasks': 'Task Orchestration',
+                'integrations': 'Integrations Marketplace',
+                'knowledge': 'Knowledge Base'
+            };
+            document.getElementById('page-title').innerText = titles[screenId] || 'Dashboard';
+        }
+
+        // Init
+        switchRole('owner');
+    </script>
+</body>
+</html>
